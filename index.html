@@ -54,7 +54,6 @@
             margin-top: 20px;
             font-size: 1.5rem;
         }
-        /* Menu styles */
         .menu {
             margin-bottom: 20px;
             text-align: center;
@@ -70,14 +69,22 @@
 <body>
     <div class="menu">
         <label for="reelCount">Number of Reels: <span id="reelCountLabel">3</span></label>
-        <input type="range" id="reelCount" min="1" max="10" value="3" oninput="updateReelCount()">
+        <input type="range" id="reelCount" min="3" max="10" value="3" oninput="updateReelCount()">
     </div>
-    
+
     <div class="slot-machine">
         <h1>Slot Machine</h1>
+        <div class="message" id="message"></div>
+
+        <!-- Profile section -->
+        <div id="profileSection">
+            <label for="username">Enter your name: </label>
+            <input type="text" id="username" placeholder="Your Name">
+            <button onclick="setProfile()">Set Profile</button>
+        </div>
+
         <div class="reels" id="reelsContainer"></div>
         <button class="spin-button" onclick="spin()">Spin</button>
-        <div class="message" id="message"></div>
         <div class="balance" id="balance">Balance: 25 ConishBucks</div>
     </div>
 
@@ -87,14 +94,33 @@
         let reels = [];
         let spinning = [];
         let intervalIds = [];
-        let balance = 25.00; // Start with 25 ConishBucks
+        let balance = 25.00; // Default balance
+        let username = '';
+
+        // Check if profile data exists in localStorage
+        if (localStorage.getItem('username') && localStorage.getItem('balance')) {
+            username = localStorage.getItem('username');
+            balance = parseFloat(localStorage.getItem('balance'));
+            document.getElementById('balance').textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
+            document.getElementById('profileSection').style.display = 'none'; // Hide profile setup
+        }
+
+        function setProfile() {
+            username = document.getElementById('username').value.trim();
+            if (username === '') {
+                alert('Please enter a valid name!');
+                return;
+            }
+            localStorage.setItem('username', username);
+            localStorage.setItem('balance', balance); // Save balance to localStorage
+            document.getElementById('balance').textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
+            document.getElementById('profileSection').style.display = 'none'; // Hide profile setup
+            document.getElementById('message').textContent = `Welcome, ${username}!`;
+        }
 
         function updateReelCount() {
-            // Update the reel count based on slider value
             reelCount = document.getElementById("reelCount").value;
             document.getElementById("reelCountLabel").textContent = reelCount;
-
-            // Re-create reels
             createReels();
         }
 
@@ -106,18 +132,15 @@
             intervalIds = Array(reelCount).fill(null);
 
             for (let i = 0; i < reelCount; i++) {
-                // Create reel container
                 const reelContainer = document.createElement("div");
                 reelContainer.classList.add("reel-container");
 
-                // Create reel display
                 const reel = document.createElement("div");
                 reel.classList.add("reel");
                 reel.id = `reel${i + 1}`;
                 reel.textContent = symbols[Math.floor(Math.random() * symbols.length)];
                 reelContainer.appendChild(reel);
 
-                // Create stop button for the reel
                 const stopButton = document.createElement("button");
                 stopButton.classList.add("stop-button");
                 stopButton.textContent = "Stop";
@@ -125,7 +148,6 @@
                 stopButton.disabled = true;
                 reelContainer.appendChild(stopButton);
 
-                // Add the reel container to the reels container
                 reelsContainer.appendChild(reelContainer);
             }
         }
@@ -135,12 +157,12 @@
                 document.getElementById("message").textContent = "Insufficient balance to spin!";
                 return;
             }
-            
-            // Reset message and balance display
-            document.getElementById("message").textContent = "";
+
+            // Update balance and spin the reels
+            balance -= 0.25;
+            localStorage.setItem('balance', balance.toFixed(2)); // Save updated balance to localStorage
             document.getElementById("balance").textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
 
-            // Start spinning each reel
             for (let i = 0; i < reelCount; i++) {
                 startReel(i);
                 document.querySelectorAll(".stop-button")[i].disabled = false;
@@ -156,23 +178,20 @@
         }
 
         function stopReel(reelIndex) {
-            clearInterval(intervalIds[reelIndex]); // Stop the interval for this reel
+            clearInterval(intervalIds[reelIndex]);
             spinning[reelIndex] = false;
 
-            // Select a final symbol for the reel
             const finalSymbol = symbols[Math.floor(Math.random() * symbols.length)];
             document.getElementById(`reel${reelIndex + 1}`).textContent = finalSymbol;
             reels[reelIndex] = finalSymbol;
             document.querySelectorAll(".stop-button")[reelIndex].disabled = true;
 
-            // Check if all reels have stopped
             if (!spinning.includes(true)) {
                 checkResult();
             }
         }
 
         function calculateWinnings() {
-            // Calculate winnings with a weighted probability, more likely to get lower amounts
             const random = Math.random();
             if (random < 0.5) return (5 + Math.random() * 10).toFixed(2);      // $5 - $15, 50% chance
             else if (random < 0.75) return (15 + Math.random() * 15).toFixed(2); // $15 - $30, 25% chance
@@ -185,19 +204,17 @@
             const uniqueSymbols = new Set(reels);
             if (uniqueSymbols.size === 1) {
                 const winnings = parseFloat(calculateWinnings());
-                balance += winnings; // Add random winnings to balance
+                balance += winnings;
                 document.getElementById("message").textContent = `🎉 Jackpot! You Win ${winnings} ConishBucks! 🎉`;
             } else {
                 document.getElementById("message").textContent = "No luck this time!";
-                balance -= 0.25; // Deduct $0.25 for a loss
             }
-            
-            // Update balance display
+
+            localStorage.setItem('balance', balance.toFixed(2)); // Save updated balance
             document.getElementById("balance").textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
         }
 
-        // Initialize the game with default reel count
-        updateReelCount();
+        updateReelCount(); // Initialize game
     </script>
 </body>
 </html>
