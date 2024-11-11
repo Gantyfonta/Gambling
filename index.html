@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Machine Game with Animation</title>
+    <title>Slot Machine Game with Adjustable Reels</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,6 +13,7 @@
             height: 100vh;
             background-color: #2c3e50;
             color: #ecf0f1;
+            flex-direction: column;
         }
         .slot-machine {
             text-align: center;
@@ -53,41 +54,86 @@
             margin-top: 20px;
             font-size: 1.5rem;
         }
+        /* Menu styles */
+        .menu {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .menu label {
+            font-size: 1.2rem;
+        }
+        .menu input[type="range"] {
+            width: 200px;
+        }
     </style>
 </head>
 <body>
+    <div class="menu">
+        <label for="reelCount">Number of Reels: <span id="reelCountLabel">3</span></label>
+        <input type="range" id="reelCount" min="1" max="12" value="3" oninput="updateReelCount()">
+    </div>
+    
     <div class="slot-machine">
         <h1>Slot Machine</h1>
-        <div class="reels">
-            <div class="reel-container">
-                <div class="reel" id="reel1">🍒</div>
-                <button class="stop-button" onclick="stopReel(0)" disabled>Stop</button>
-            </div>
-            <div class="reel-container">
-                <div class="reel" id="reel2">🍋</div>
-                <button class="stop-button" onclick="stopReel(1)" disabled>Stop</button>
-            </div>
-            <div class="reel-container">
-                <div class="reel" id="reel3">🍉</div>
-                <button class="stop-button" onclick="stopReel(2)" disabled>Stop</button>
-            </div>
-        </div>
+        <div class="reels" id="reelsContainer"></div>
         <button class="spin-button" onclick="spin()">Spin</button>
         <div class="message" id="message"></div>
     </div>
 
     <script>
         const symbols = ["🍒", "🍋", "🍉", "🍇", "🔔", "⭐"];
-        const reels = [null, null, null];
-        let spinning = [false, false, false];
-        let intervalIds = [null, null, null];
+        let reelCount = 3; // Default reel count
+        let reels = [];
+        let spinning = [];
+        let intervalIds = [];
+
+        function updateReelCount() {
+            // Update the reel count based on slider value
+            reelCount = document.getElementById("reelCount").value;
+            document.getElementById("reelCountLabel").textContent = reelCount;
+
+            // Re-create reels
+            createReels();
+        }
+
+        function createReels() {
+            const reelsContainer = document.getElementById("reelsContainer");
+            reelsContainer.innerHTML = ""; // Clear existing reels
+            reels = Array(reelCount).fill(null);
+            spinning = Array(reelCount).fill(false);
+            intervalIds = Array(reelCount).fill(null);
+
+            for (let i = 0; i < reelCount; i++) {
+                // Create reel container
+                const reelContainer = document.createElement("div");
+                reelContainer.classList.add("reel-container");
+
+                // Create reel display
+                const reel = document.createElement("div");
+                reel.classList.add("reel");
+                reel.id = `reel${i + 1}`;
+                reel.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                reelContainer.appendChild(reel);
+
+                // Create stop button for the reel
+                const stopButton = document.createElement("button");
+                stopButton.classList.add("stop-button");
+                stopButton.textContent = "Stop";
+                stopButton.onclick = () => stopReel(i);
+                stopButton.disabled = true;
+                reelContainer.appendChild(stopButton);
+
+                // Add the reel container to the reels container
+                reelsContainer.appendChild(reelContainer);
+            }
+        }
 
         function spin() {
             // Reset message
             document.getElementById("message").textContent = "";
 
             // Start spinning each reel
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < reelCount; i++) {
                 startReel(i);
                 document.querySelectorAll(".stop-button")[i].disabled = false;
             }
@@ -96,10 +142,9 @@
         function startReel(reelIndex) {
             spinning[reelIndex] = true;
             intervalIds[reelIndex] = setInterval(() => {
-                // Display random symbol for animation effect
                 const symbol = symbols[Math.floor(Math.random() * symbols.length)];
                 document.getElementById(`reel${reelIndex + 1}`).textContent = symbol;
-            }, 100); // Adjust the interval time for faster or slower spin effect
+            }, 100); // Spin speed
         }
 
         function stopReel(reelIndex) {
@@ -119,15 +164,18 @@
         }
 
         function checkResult() {
-            const [reel1, reel2, reel3] = reels;
-            if (reel1 === reel2 && reel2 === reel3) {
+            const uniqueSymbols = new Set(reels);
+            if (uniqueSymbols.size === 1) {
                 document.getElementById("message").textContent = "🎉 Jackpot! You Win! 🎉";
-            } else if (reel1 === reel2 || reel2 === reel3 || reel1 === reel3) {
+            } else if (uniqueSymbols.size <= reelCount / 2) {
                 document.getElementById("message").textContent = "Almost! Try Again!";
             } else {
                 document.getElementById("message").textContent = "No luck this time!";
             }
         }
+
+        // Initialize the game with default reel count
+        updateReelCount();
     </script>
 </body>
 </html>
