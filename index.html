@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine Game with Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        .slot-machine {
+            text-align: center;
+        }
+        .reels {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .reel-container {
+            margin: 0 10px;
+            text-align: center;
+        }
+        .reel {
+            font-size: 2rem;
+            background-color: #34495e;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            padding: 20px;
+            width: 60px;
+            height: 60px;
+        }
+        .spin-button, .stop-button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px;
+        }
+        .spin-button:hover, .stop-button:hover {
+            background-color: #c0392b;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="slot-machine">
+        <h1>Slot Machine</h1>
+        <div class="reels">
+            <div class="reel-container">
+                <div class="reel" id="reel1">🍒</div>
+                <button class="stop-button" onclick="stopReel(0)" disabled>Stop</button>
+            </div>
+            <div class="reel-container">
+                <div class="reel" id="reel2">🍋</div>
+                <button class="stop-button" onclick="stopReel(1)" disabled>Stop</button>
+            </div>
+            <div class="reel-container">
+                <div class="reel" id="reel3">🍉</div>
+                <button class="stop-button" onclick="stopReel(2)" disabled>Stop</button>
+            </div>
+        </div>
+        <button class="spin-button" onclick="spin()">Spin</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const symbols = ["🍒", "🍋", "🍉", "🍇", "🔔", "⭐"];
+        const reels = [null, null, null];
+        let spinning = [false, false, false];
+        let intervalIds = [null, null, null];
+
+        function spin() {
+            // Reset message
+            document.getElementById("message").textContent = "";
+
+            // Start spinning each reel
+            for (let i = 0; i < 3; i++) {
+                startReel(i);
+                document.querySelectorAll(".stop-button")[i].disabled = false;
+            }
+        }
+
+        function startReel(reelIndex) {
+            spinning[reelIndex] = true;
+            intervalIds[reelIndex] = setInterval(() => {
+                // Display random symbol for animation effect
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                document.getElementById(`reel${reelIndex + 1}`).textContent = symbol;
+            }, 100); // Adjust the interval time for faster or slower spin effect
+        }
+
+        function stopReel(reelIndex) {
+            clearInterval(intervalIds[reelIndex]); // Stop the interval for this reel
+            spinning[reelIndex] = false;
+
+            // Select a final symbol for the reel
+            const finalSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            document.getElementById(`reel${reelIndex + 1}`).textContent = finalSymbol;
+            reels[reelIndex] = finalSymbol;
+            document.querySelectorAll(".stop-button")[reelIndex].disabled = true;
+
+            // Check if all reels have stopped
+            if (!spinning.includes(true)) {
+                checkResult();
+            }
+        }
+
+        function checkResult() {
+            const [reel1, reel2, reel3] = reels;
+            if (reel1 === reel2 && reel2 === reel3) {
+                document.getElementById("message").textContent = "🎉 Jackpot! You Win! 🎉";
+            } else if (reel1 === reel2 || reel2 === reel3 || reel1 === reel3) {
+                document.getElementById("message").textContent = "Almost! Try Again!";
+            } else {
+                document.getElementById("message").textContent = "No luck this time!";
+            }
+        }
+    </script>
+</body>
+</html>
