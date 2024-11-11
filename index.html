@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Machine Game with Adjustable Reels</title>
+    <title>Slot Machine Game with Adjustable Reels and Balance</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,7 +70,7 @@
 <body>
     <div class="menu">
         <label for="reelCount">Number of Reels: <span id="reelCountLabel">3</span></label>
-        <input type="range" id="reelCount" min="1" max="12" value="3" oninput="updateReelCount()">
+        <input type="range" id="reelCount" min="1" max="10" value="3" oninput="updateReelCount()">
     </div>
     
     <div class="slot-machine">
@@ -78,6 +78,7 @@
         <div class="reels" id="reelsContainer"></div>
         <button class="spin-button" onclick="spin()">Spin</button>
         <div class="message" id="message"></div>
+        <div class="balance" id="balance">Balance: 25 ConishBucks</div>
     </div>
 
     <script>
@@ -86,6 +87,7 @@
         let reels = [];
         let spinning = [];
         let intervalIds = [];
+        let balance = 25.00; // Start with 25 ConishBucks
 
         function updateReelCount() {
             // Update the reel count based on slider value
@@ -129,8 +131,14 @@
         }
 
         function spin() {
-            // Reset message
+            if (balance < 0.25) {
+                document.getElementById("message").textContent = "Insufficient balance to spin!";
+                return;
+            }
+            
+            // Reset message and balance display
             document.getElementById("message").textContent = "";
+            document.getElementById("balance").textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
 
             // Start spinning each reel
             for (let i = 0; i < reelCount; i++) {
@@ -163,15 +171,29 @@
             }
         }
 
+        function calculateWinnings() {
+            // Calculate winnings with a weighted probability, more likely to get lower amounts
+            const random = Math.random();
+            if (random < 0.5) return (5 + Math.random() * 10).toFixed(2);      // $5 - $15, 50% chance
+            else if (random < 0.75) return (15 + Math.random() * 15).toFixed(2); // $15 - $30, 25% chance
+            else if (random < 0.9) return (30 + Math.random() * 20).toFixed(2);  // $30 - $50, 15% chance
+            else if (random < 0.98) return (50 + Math.random() * 25).toFixed(2); // $50 - $75, 8% chance
+            else return (75 + Math.random() * 25).toFixed(2);                   // $75 - $100, 2% chance
+        }
+
         function checkResult() {
             const uniqueSymbols = new Set(reels);
             if (uniqueSymbols.size === 1) {
-                document.getElementById("message").textContent = "🎉 Jackpot! You Win! 🎉";
-            } else if (uniqueSymbols.size <= reelCount / 2) {
-                document.getElementById("message").textContent = "Almost! Try Again!";
+                const winnings = parseFloat(calculateWinnings());
+                balance += winnings; // Add random winnings to balance
+                document.getElementById("message").textContent = `🎉 Jackpot! You Win ${winnings} ConishBucks! 🎉`;
             } else {
                 document.getElementById("message").textContent = "No luck this time!";
+                balance -= 0.25; // Deduct $0.25 for a loss
             }
+            
+            // Update balance display
+            document.getElementById("balance").textContent = `Balance: ${balance.toFixed(2)} ConishBucks`;
         }
 
         // Initialize the game with default reel count
